@@ -15,14 +15,14 @@ class ReportsDataByMonth extends ChartWidget
     protected function getData(): array
     {
         if ($this->filter) {
-            $year = $this->filter   ;
+            $year = $this->filter;
         } else {
             $year = now()->year;
         }
 
 
         $reports = Report::select(
-            DB::raw('MONTH(created_at) as month'),
+            DB::raw("CAST(STRFTIME('%m', created_at) AS INTEGER) as month"),
             DB::raw('COUNT(*) as total')
         )
             ->whereYear('created_at', $year)
