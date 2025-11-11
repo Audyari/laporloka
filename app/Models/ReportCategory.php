@@ -27,7 +27,7 @@ class ReportCategory extends Model
 
     public function reports(): HasMany
     {
-        return $this->hasMany(Report::class);
+        return $this->hasMany(Report::class, 'category_id', 'id');
     }
 
     public function activeReports(): HasMany
