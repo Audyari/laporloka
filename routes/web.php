@@ -3,13 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
-use Laravel\Folio\Folio;
+use App\Http\Controllers\HomeController;
 
-Folio::path(resource_path('views/folio'))->uri('/');
-
-// Route::get('/', function () {
-//     return view('welcome');
-// })->name('home');
+// Home routes
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/about', [HomeController::class, 'about'])->name('about');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
