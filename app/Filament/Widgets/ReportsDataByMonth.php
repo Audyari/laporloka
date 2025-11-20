@@ -22,7 +22,7 @@ class ReportsDataByMonth extends ChartWidget
 
 
         $reports = Report::select(
-            DB::raw("CAST(STRFTIME('%m', created_at) AS INTEGER) as month"),
+            DB::raw("MONTH(created_at) as month"),
             DB::raw('COUNT(*) as total')
         )
             ->whereYear('created_at', $year)
