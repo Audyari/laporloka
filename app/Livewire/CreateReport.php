@@ -95,8 +95,18 @@ class CreateReport extends Component
 
     public function getCurrentLocation()
     {
-        // This will be handled by JavaScript on the frontend
+        // This will trigger JavaScript to get current location
         $this->dispatch('get-current-location');
+    }
+
+    public function setLocationData($latitude, $longitude, $address = null)
+    {
+        $this->latitude = $latitude;
+        $this->longitude = $longitude;
+        
+        if ($address) {
+            $this->location_address = $address;
+        }
     }
 
     public function render()

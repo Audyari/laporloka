@@ -89,8 +89,10 @@
                     <div class="flex items-center justify-between mb-2">
                         <label for="location_address" class="block text-sm font-semibold text-gray-700">Alamat Lokasi</label>
                         <button type="button" wire:click="getCurrentLocation" 
-                                class="text-sm text-blue-600 hover:text-blue-700 font-semibold">
-                            📍 Gunakan Lokasi Saat Ini
+                                id="location-btn"
+                                class="text-sm text-blue-600 hover:text-blue-700 font-semibold flex items-center space-x-1 transition-colors duration-200">
+                            <span>📍</span>
+                            <span id="location-btn-text">Gunakan Lokasi Saat Ini</span>
                         </button>
                     </div>
                     <input type="text" id="location_address" wire:model="location_address" 
@@ -179,25 +181,86 @@
 document.addEventListener('livewire:init', () => {
     Livewire.on('get-current-location', () => {
         if (navigator.geolocation) {
+            // Update button and input state
+            const locationBtn = document.getElementById('location-btn');
+            const locationBtnText = document.getElementById('location-btn-text');
+            const locationInput = document.querySelector('#location_address');
+            
+            // Show loading state
+            locationBtnText.textContent = 'Mengambil Lokasi...';
+            locationBtn.disabled = true;
+            locationBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            locationInput.placeholder = 'Mengambil lokasi...';
+            
             navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    @this.set('latitude', position.coords.latitude);
-                    @this.set('longitude', position.coords.longitude);
+                async (position) => {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
                     
-                    // Optional: Reverse geocoding to get address
-                    if (window.google && google.maps) {
-                        const geocoder = new google.maps.Geocoder();
-                        const latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                    // Set coordinates
+                    @this.set('latitude', latitude);
+                    @this.set('longitude', longitude);
+                    
+                    try {
+                        // Use OpenStreetMap Nominatim for reverse geocoding (free)
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16&addressdetails=1`);
                         
-                        geocoder.geocode({location: latlng}, (results, status) => {
-                            if (status === 'OK' && results[0]) {
-                                @this.set('location_address', results[0].formatted_address);
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data && data.display_name) {
+                                @this.set('location_address', data.display_name);
+                            } else {
+                                @this.set('location_address', `${latitude}, ${longitude}`);
                             }
-                        });
+                        } else {
+                            // Fallback to coordinates
+                            @this.set('location_address', `${latitude}, ${longitude}`);
+                        }
+                    } catch (error) {
+                        console.error('Error getting address:', error);
+                        // Fallback to coordinates
+                        @this.set('location_address', `${latitude}, ${longitude}`);
                     }
+                    
+                    // Reset button and input state
+                    locationBtnText.textContent = 'Lokasi Berhasil Diambil ✓';
+                    locationBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    locationBtn.classList.add('text-green-600');
+                    locationInput.placeholder = 'Masukkan alamat lengkap lokasi masalah';
+                    
+                    // Reset button text after 3 seconds
+                    setTimeout(() => {
+                        locationBtnText.textContent = 'Gunakan Lokasi Saat Ini';
+                        locationBtn.classList.remove('text-green-600');
+                        locationBtn.disabled = false;
+                    }, 3000);
                 },
                 (error) => {
-                    alert('Tidak dapat mengakses lokasi Anda. Silakan masukkan alamat secara manual.');
+                    // Reset button and input state
+                    locationBtnText.textContent = 'Gunakan Lokasi Saat Ini';
+                    locationBtn.disabled = false;
+                    locationBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    locationInput.placeholder = 'Masukkan alamat lengkap lokasi masalah';
+                    
+                    let errorMessage = 'Tidak dapat mengakses lokasi Anda.';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'Akses lokasi ditolak. Silakan izinkan akses lokasi di browser Anda.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'Informasi lokasi tidak tersedia.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'Permintaan lokasi timeout.';
+                            break;
+                    }
+                    
+                    alert(errorMessage + ' Silakan masukkan alamat secara manual.');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 60000
                 }
             );
         } else {
