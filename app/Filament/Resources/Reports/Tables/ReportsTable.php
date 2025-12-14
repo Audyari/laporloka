@@ -6,6 +6,9 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -26,7 +29,7 @@ class ReportsTable
                 TextColumn::make('title')
                     ->searchable(),
                 TextColumn::make('description')
-                    ->limit(50)
+                    ->limit(20)
                     ->searchable(),
                 TextColumn::make('category.name')
                     ->searchable(),
@@ -69,16 +72,56 @@ class ReportsTable
                     ->relationship('category', 'name'),
                 SelectFilter::make('status')
                     ->options([
-                        'Pending' => 'pending',
-                        'In Progress' => 'in_progress',
-                        'Reviewed' => 'reviewed',
-                        'Rejected' => 'rejected',
-                        'Resolved' => 'resolved',
+                        'pending' => 'Pending',
+                        'in_progress' => 'In Progress',
+                        'reviewed' => 'Reviewed',
+                        'rejected' => 'Rejected',
+                        'resolved' => 'Resolved',
                     ])
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()
+                    ->label('Update Status')
+                    ->icon('heroicon-o-arrow-path')
+                    ->schema([
+                        Grid::make(2)
+                            ->schema([
+
+                                TextEntry::make('user.name')
+                                    ->label('Reported By'),
+                                TextEntry::make('category.name')
+                                    ->label('Category'),
+                                TextEntry::make('title'),
+                                TextEntry::make('description')
+                                    ->columnSpanFull(),
+                                TextEntry::make('location_address'),
+                                TextEntry::make('latitude')
+                                    ->numeric(),
+                                TextEntry::make('longitude')
+                                    ->numeric(),
+                                Select::make('status')
+                                    ->default(fn($record) => $record?->status ?? 'pending')
+                                    ->options([
+                                        'pending' => 'Pending',
+                                        'in_progress' => 'In Progress',
+                                        'reviewed' => 'Reviewed',
+                                        'rejected' => 'Rejected',
+                                        'resolved' => 'Resolved',
+                                    ]),
+                                TextEntry::make('priority')
+                                    ->default('medium'),
+                                TextEntry::make('report_number'),
+                                TextEntry::make('reported_at'),
+                                TextEntry::make('resolved_at'),
+                                TextEntry::make('admin_notes')
+                                    ->columnSpanFull(),
+                                TextEntry::make('assigned_to'),
+                                TextEntry::make('views_count')
+                                    ->numeric()
+                                    ->default(0),
+                            ])
+                    ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

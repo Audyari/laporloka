@@ -4,8 +4,8 @@ namespace App\Filament\Resources\Reports\Schemas;
 
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Grid;
-use Dotswan\MapPicker\Infolists\MapEntry;
-use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Components\Section;
@@ -70,6 +70,25 @@ class ReportInfolist
                             ->color('primary'),
                     ])
                     ->columnSpanFull(),
+                Section::make('Comments')
+                    ->schema([
+                        RepeatableEntry::make('comments')
+                            ->hiddenLabel()
+                            ->table([
+                                TableColumn::make('User'),
+                                TableColumn::make('Type'),
+                                TableColumn::make('Content'),
+                            ])
+                            ->schema([
+                                TextEntry::make('user.name'),
+                                TextEntry::make('type'),
+                                TextEntry::make('content'),
+                            ])
+
+                    ])
+                    ->columnSpanFull()
+                    ->collapsible() // <--- ini untuk bisa collapse
+                    ->collapsed(),
                 ViewEntry::make('location_map')
                     ->label('Location')
                     ->view('filament.maps.show-map')
